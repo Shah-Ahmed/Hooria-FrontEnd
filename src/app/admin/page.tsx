@@ -6,13 +6,14 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import RequireRole from "@/components/RequireRole";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch, errorMessage } from "@/lib/api";
-import type { OrgUser } from "@/types";
+import type { Organization, OrgUser } from "@/types";
 
 const EMPTY_FORM = { name: "", email: "", password: "" };
 
 function AdminContent() {
   const { profile } = useAuth();
   const [users, setUsers] = useState<OrgUser[]>([]);
+  const [org, setOrg] = useState<Organization | null>(null); // details + user limit of my organization
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -21,7 +22,12 @@ function AdminContent() {
 
   const loadUsers = useCallback(async () => {
     try {
-      setUsers(await apiFetch<OrgUser[]>("/api/users"));
+      const [list, myOrg] = await Promise.all([
+        apiFetch<OrgUser[]>("/api/users"),
+        apiFetch<Organization>("/api/my-organization"),
+      ]);
+      setUsers(list);
+      setOrg(myOrg);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -49,6 +55,7 @@ function AdminContent() {
       await loadUsers();
     } catch (err) {
       setError(errorMessage(err));
+      await loadUsers(); // the limit may have been reached in the meantime: refresh the notice
     } finally {
       setSaving(false);
     }
@@ -72,15 +79,37 @@ function AdminContent() {
 
   return (
     <>
-      <h1 className="h4 mb-3">{profile?.organization?.name ?? "My organization"}: users</h1>
+      <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h1 className="h4 mb-1">{profile?.organization?.name ?? "My organization"}: users</h1>
+          {org && (
+            <div className="meta-text">
+              {[org.type, org.address, org.city, org.country].filter(Boolean).join(" · ")}
+            </div>
+          )}
+        </div>
+        {org && (
+          <span className={`badge badge-soft ${org.limitReached ? "badge-soft-warning" : "badge-soft-success"}`}>
+            Users: {org.userLimit === null ? `${org.userCount} (no limit)` : `${org.userCount} / ${org.userLimit}`}
+          </span>
+        )}
+      </div>
 
+      {org?.limitReached && (
+        <div className="alert alert-warning" role="alert">
+          <strong>User limit reached</strong> ({org.userCount} of {org.userLimit}). No more users can be added.
+          Please contact the super admin to increase the limit.
+        </div>
+      )}
       {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <div className="card shadow-sm mb-4">
+      <div className="card mb-4">
         <div className="card-body">
           <h2 className="h6 mb-3">Create user</h2>
-          <form onSubmit={handleCreate} className="row g-3">
+          <form onSubmit={handleCreate}>
+            {/* the whole form is switched off when the user limit is reached */}
+            <fieldset disabled={saving || !!org?.limitReached} className="row g-3 m-0 p-0 border-0">
             <div className="col-md-4">
               <label className="form-label" htmlFor="userName">Name</label>
               <input id="userName" className="form-control" value={form.name}
@@ -98,15 +127,16 @@ function AdminContent() {
                 autoComplete="new-password" />
             </div>
             <div className="col-12">
-              <button className="btn btn-primary" type="submit" disabled={saving}>
+              <button className="btn btn-primary" type="submit" disabled={saving || !!org?.limitReached}>
                 {saving ? "Creating..." : "Create user"}
               </button>
             </div>
+            </fieldset>
           </form>
         </div>
       </div>
 
-      <div className="card shadow-sm">
+      <div className="card">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
             <thead>

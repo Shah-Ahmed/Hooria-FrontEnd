@@ -15,16 +15,16 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="navbar navbar-dark bg-dark">
+    <nav className="navbar app-navbar">
       <div className="container">
         <Link className="navbar-brand" href={profile ? HOME_BY_ROLE[profile.role] : "/login"}>
           TechProject
         </Link>
         {profile && (
-          <div className="d-flex align-items-center gap-3 text-white">
+          <div className="d-flex align-items-center gap-3">
             <span>
               {profile.name || profile.email}{" "}
-              <span className="badge text-bg-secondary">{ROLE_LABEL[profile.role]}</span>
+              <span className="badge badge-soft badge-soft-violet">{ROLE_LABEL[profile.role]}</span>
             </span>
             <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
               Logout

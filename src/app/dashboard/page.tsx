@@ -10,7 +10,7 @@ function DashboardContent() {
   if (!profile) return null;
 
   return (
-    <div className="card shadow-sm">
+    <div className="card">
       <div className="card-body">
         <h1 className="h4 mb-3">Welcome, {profile.name || profile.email}</h1>
         <dl className="row mb-0">

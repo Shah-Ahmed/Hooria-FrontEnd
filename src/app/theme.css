@@ -1,0 +1,210 @@
+/* Theme: Premium Dark SaaS (Electric Blue + Violet)
+   Colors from the UI Theme Recommendation:
+     Primary   Electric Blue #3B82F6   Secondary Violet #8B5CF6
+     Success   Emerald       #10B981   Warning   Amber  #F59E0B   Danger Rose #F43F5E
+     Background #0B1220                Surface   #111C31
+   It sits on top of Bootstrap's dark mode (<html data-bs-theme="dark">). */
+
+html[data-bs-theme="dark"] {
+  --tp-bg: #0B1220;
+  --tp-surface: #111C31;
+  --tp-border: #22304D;
+  --tp-text: #E2E8F0;
+  --tp-muted: #94A3B8;
+  --tp-primary: #3B82F6;
+  --tp-secondary: #8B5CF6;
+  --tp-success: #10B981;
+  --tp-warning: #F59E0B;
+  --tp-danger: #F43F5E;
+
+  color-scheme: dark;
+
+  --bs-body-bg: #0B1220;
+  --bs-body-bg-rgb: 11, 18, 32;
+  --bs-body-color: #E2E8F0;
+  --bs-body-color-rgb: 226, 232, 240;
+  --bs-emphasis-color: #FFFFFF;
+  --bs-secondary-color: #94A3B8;
+  --bs-secondary-bg: #111C31;
+  --bs-tertiary-bg: #0F192B;
+  --bs-border-color: #22304D;
+
+  --bs-primary: #3B82F6;
+  --bs-primary-rgb: 59, 130, 246;
+  --bs-link-color: #60A5FA;
+  --bs-link-color-rgb: 96, 165, 250;
+  --bs-link-hover-color: #93C5FD;
+  --bs-link-hover-color-rgb: 147, 197, 253;
+  --bs-success: #10B981;
+  --bs-success-rgb: 16, 185, 129;
+  --bs-warning: #F59E0B;
+  --bs-warning-rgb: 245, 158, 11;
+  --bs-danger: #F43F5E;
+  --bs-danger-rgb: 244, 63, 94;
+
+  /* alert colors */
+  --bs-success-bg-subtle: rgba(16, 185, 129, 0.12);
+  --bs-success-border-subtle: rgba(16, 185, 129, 0.35);
+  --bs-success-text-emphasis: #6EE7B7;
+  --bs-warning-bg-subtle: rgba(245, 158, 11, 0.12);
+  --bs-warning-border-subtle: rgba(245, 158, 11, 0.4);
+  --bs-warning-text-emphasis: #FCD34D;
+  --bs-danger-bg-subtle: rgba(244, 63, 94, 0.12);
+  --bs-danger-border-subtle: rgba(244, 63, 94, 0.4);
+  --bs-danger-text-emphasis: #FDA4AF;
+}
+
+/* ---------- navbar ---------- */
+.app-navbar {
+  background: var(--tp-surface);
+  border-bottom: 1px solid var(--tp-border);
+}
+.app-navbar .navbar-brand {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.app-navbar .navbar-brand::before {
+  content: "";
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+}
+
+/* ---------- cards ---------- */
+.card {
+  --bs-card-bg: var(--tp-surface);
+  --bs-card-border-color: var(--tp-border);
+  --bs-card-cap-bg: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ---------- forms ---------- */
+.form-control,
+.form-select {
+  background-color: var(--tp-bg);
+  border-color: var(--tp-border);
+  color: var(--tp-text);
+}
+.form-control::placeholder {
+  color: #64748B;
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--tp-bg);
+  color: var(--tp-text);
+  border-color: var(--tp-primary);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #0D1627;
+  color: #64748B;
+}
+.form-label {
+  color: var(--tp-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- tables ---------- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--tp-text);
+  --bs-table-border-color: var(--tp-border);
+  --bs-table-hover-bg: rgba(59, 130, 246, 0.08);
+  --bs-table-hover-color: #fff;
+}
+.table > thead > tr > th {
+  color: var(--tp-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(15, 25, 43, 0.6);
+}
+
+/* ---------- buttons ---------- */
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #3B82F6;
+  --bs-btn-border-color: #3B82F6;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #2563EB;
+  --bs-btn-hover-border-color: #2563EB;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #1D4ED8;
+  --bs-btn-active-border-color: #1D4ED8;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #3B82F6;
+  --bs-btn-disabled-border-color: #3B82F6;
+  --bs-btn-focus-shadow-rgb: 59, 130, 246;
+}
+.btn-outline-primary {
+  --bs-btn-color: #60A5FA;
+  --bs-btn-border-color: #3B82F6;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #3B82F6;
+  --bs-btn-hover-border-color: #3B82F6;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #2563EB;
+  --bs-btn-active-border-color: #2563EB;
+  --bs-btn-disabled-color: #60A5FA;
+  --bs-btn-disabled-border-color: #3B82F6;
+  --bs-btn-focus-shadow-rgb: 59, 130, 246;
+}
+.btn-outline-secondary {
+  --bs-btn-color: #C4B5FD;
+  --bs-btn-border-color: #8B5CF6;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #8B5CF6;
+  --bs-btn-hover-border-color: #8B5CF6;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #7C3AED;
+  --bs-btn-active-border-color: #7C3AED;
+  --bs-btn-disabled-color: #C4B5FD;
+  --bs-btn-disabled-border-color: #8B5CF6;
+  --bs-btn-focus-shadow-rgb: 139, 92, 246;
+}
+.btn-outline-danger {
+  --bs-btn-color: #FB7185;
+  --bs-btn-border-color: #F43F5E;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #F43F5E;
+  --bs-btn-hover-border-color: #F43F5E;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #E11D48;
+  --bs-btn-active-border-color: #E11D48;
+  --bs-btn-disabled-color: #FB7185;
+  --bs-btn-disabled-border-color: #F43F5E;
+  --bs-btn-focus-shadow-rgb: 244, 63, 94;
+}
+.btn-outline-light {
+  --bs-btn-color: var(--tp-text);
+  --bs-btn-border-color: var(--tp-border);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: rgba(148, 163, 184, 0.15);
+  --bs-btn-hover-border-color: #475569;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: rgba(148, 163, 184, 0.25);
+  --bs-btn-active-border-color: #475569;
+}
+
+/* ---------- badges (soft colored labels) ---------- */
+.badge-soft {
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.badge-soft-primary { background: rgba(59, 130, 246, 0.15); color: #93C5FD; border-color: rgba(59, 130, 246, 0.4); }
+.badge-soft-violet  { background: rgba(139, 92, 246, 0.15); color: #C4B5FD; border-color: rgba(139, 92, 246, 0.4); }
+.badge-soft-success { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; border-color: rgba(16, 185, 129, 0.4); }
+.badge-soft-warning { background: rgba(245, 158, 11, 0.15); color: #FCD34D; border-color: rgba(245, 158, 11, 0.4); }
+.badge-soft-danger  { background: rgba(244, 63, 94, 0.15);  color: #FDA4AF; border-color: rgba(244, 63, 94, 0.4); }
+
+/* small detail text under a name in tables / headers */
+.meta-text {
+  color: var(--tp-muted);
+  font-size: 0.8rem;
+}
