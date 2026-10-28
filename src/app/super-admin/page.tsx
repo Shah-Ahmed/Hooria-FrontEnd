@@ -6,6 +6,7 @@
 //   - VIEW the users of an organization (read-only: no create / edit / delete buttons)
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import RequireRole from "@/components/RequireRole";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { ORG_TYPES } from "@/lib/orgTypes";
@@ -32,8 +33,17 @@ function formatLimit(org: Organization) {
   return org.userLimit === null ? `${org.userCount} / no limit` : `${org.userCount} / ${org.userLimit}`;
 }
 
+function formatDate(ms: number | null) {
+  return ms ? new Date(ms).toLocaleDateString() : "-";
+}
+
 function SuperAdminContent() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [deletedOrgs, setDeletedOrgs] = useState<Organization[]>([]);
+  const [tab, setTab] = useState<"active" | "deleted">("active");
+  const [confirmOrg, setConfirmOrg] = useState<Organization | null>(null); // waiting for the "delete?" answer
+  const [deleting, setDeleting] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -48,7 +58,12 @@ function SuperAdminContent() {
 
   const loadOrgs = useCallback(async () => {
     try {
-      setOrgs(await apiFetch<Organization[]>("/api/organizations"));
+      const [active, deleted] = await Promise.all([
+        apiFetch<Organization[]>("/api/organizations"),
+        apiFetch<Organization[]>("/api/organizations?status=deleted"),
+      ]);
+      setOrgs(active);
+      setDeletedOrgs(deleted);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -134,18 +149,39 @@ function SuperAdminContent() {
     }
   }
 
-  async function handleDelete(org: Organization) {
-    if (!window.confirm(`Delete "${org.name}"? All its users will be deactivated and can no longer log in. The records stay in the database.`)) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmOrg) return;
+    const org = confirmOrg;
+    setDeleting(true);
     setError(null);
     setSuccess(null);
     try {
       await apiFetch(`/api/organizations/${org.id}`, { method: "DELETE" });
-      setSuccess(`Organization "${org.name}" deleted`);
+      setSuccess(`Organization "${org.name}" deleted. You can find it under "Deleted organizations".`);
       if (viewOrg?.id === org.id) setViewOrg(null);
       if (editingId === org.id) cancelEdit();
       await loadOrgs();
     } catch (err) {
       setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
+      setConfirmOrg(null);
+    }
+  }
+
+  async function handleActivate(org: Organization) {
+    setActivatingId(org.id);
+    setError(null);
+    setSuccess(null);
+    try {
+      await apiFetch(`/api/organizations/${org.id}/activate`, { method: "POST" });
+      setSuccess(`Organization "${org.name}" is active again. Its admin can log in and activate the users.`);
+      await loadOrgs();
+    } catch (err) {
+      setError(errorMessage(err));
+      await loadOrgs();
+    } finally {
+      setActivatingId(null);
     }
   }
 
@@ -272,6 +308,21 @@ function SuperAdminContent() {
         </div>
       </div>
 
+      <ul className="nav nav-tabs mb-3">
+        <li className="nav-item">
+          <button className={`nav-link ${tab === "active" ? "active" : ""}`} onClick={() => setTab("active")}>
+            Active organizations ({orgs.length})
+          </button>
+        </li>
+        <li className="nav-item">
+          <button className={`nav-link ${tab === "deleted" ? "active" : ""}`} onClick={() => setTab("deleted")}>
+            Deleted organizations ({deletedOrgs.length})
+          </button>
+        </li>
+      </ul>
+
+      {tab === "active" ? (
+      <>
       <div className="card mb-4">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -316,7 +367,7 @@ function SuperAdminContent() {
                     <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => startEdit(org)}>
                       Edit
                     </button>
-                    <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(org)}>
+                    <button className="btn btn-outline-danger btn-sm" onClick={() => setConfirmOrg(org)}>
                       Delete
                     </button>
                   </td>
@@ -385,6 +436,67 @@ function SuperAdminContent() {
           </div>
         </div>
       )}
+      </>
+      ) : (
+        <div className="card">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Organization</th>
+                  <th>Admin</th>
+                  <th>Deleted on</th>
+                  <th className="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr><td colSpan={4} className="text-center py-4">Loading...</td></tr>
+                )}
+                {!loading && deletedOrgs.length === 0 && (
+                  <tr><td colSpan={4} className="text-center py-4 text-muted">No deleted organizations.</td></tr>
+                )}
+                {deletedOrgs.map((org) => (
+                  <tr key={org.id}>
+                    <td>
+                      <div>
+                        {org.name}{" "}
+                        {org.type && <span className="badge badge-soft badge-soft-primary">{org.type}</span>}
+                      </div>
+                      <div className="meta-text">{[org.address, org.city, org.country].filter(Boolean).join(", ") || "-"}</div>
+                    </td>
+                    <td>
+                      <div>{org.adminName}</div>
+                      <div className="meta-text">{org.adminEmail}</div>
+                    </td>
+                    <td>{formatDate(org.deletedAt)}</td>
+                    <td className="text-end">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => handleActivate(org)}
+                        disabled={activatingId === org.id}
+                      >
+                        {activatingId === org.id ? "Activating..." : "Activate"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={confirmOrg !== null}
+        title="Delete organization"
+        message={`Delete "${confirmOrg?.name ?? ""}"? Its admin and all its users can no longer log in. Nothing is erased: you can activate the organization again later from "Deleted organizations".`}
+        confirmLabel="Delete"
+        danger
+        busy={deleting}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmOrg(null)}
+      />
     </>
   );
 }

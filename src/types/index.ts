@@ -6,6 +6,7 @@ export interface Profile {
   email: string | null;
   role: Role;
   name: string | null;
+  photo: string | null; // profile picture (image data URL) or null
   orgId: string | null;
   organization: { id: string; name: string } | null;
 }
@@ -28,6 +29,7 @@ export interface Organization {
   adminName: string;
   adminEmail: string;
   createdAt: number;
+  deletedAt: number | null; // only set for deleted organizations
 }
 
 // Response items of GET /api/users
@@ -38,6 +40,7 @@ export interface OrgUser {
   role: Role;
   orgId: string | null;
   createdAt: number;
+  deletedAt: number | null; // only set in the "deleted users" list
 }
 
 // Response items of GET /api/organizations/:id/users (read-only list for the super admin)

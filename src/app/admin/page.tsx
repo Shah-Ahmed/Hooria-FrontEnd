@@ -1,32 +1,45 @@
 "use client";
 
-// Page for an organization admin: create, list and delete users of MY organization.
+// Page for an organization admin: create, list, delete and re-activate users of MY organization.
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import RequireRole from "@/components/RequireRole";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch, errorMessage } from "@/lib/api";
 import type { Organization, OrgUser } from "@/types";
 
 const EMPTY_FORM = { name: "", email: "", password: "" };
+const LIMIT_HINT = "User limit reached. Please contact your service provider.";
+
+function formatDate(ms: number | null) {
+  return ms ? new Date(ms).toLocaleDateString() : "-";
+}
 
 function AdminContent() {
   const { profile } = useAuth();
   const [users, setUsers] = useState<OrgUser[]>([]);
+  const [deletedUsers, setDeletedUsers] = useState<OrgUser[]>([]);
   const [org, setOrg] = useState<Organization | null>(null); // details + user limit of my organization
+  const [tab, setTab] = useState<"active" | "deleted">("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [confirmUser, setConfirmUser] = useState<OrgUser | null>(null); // user waiting for "delete?" answer
+  const [deleting, setDeleting] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     try {
-      const [list, myOrg] = await Promise.all([
+      const [list, deleted, myOrg] = await Promise.all([
         apiFetch<OrgUser[]>("/api/users"),
+        apiFetch<OrgUser[]>("/api/users?status=deleted"),
         apiFetch<Organization>("/api/my-organization"),
       ]);
       setUsers(list);
+      setDeletedUsers(deleted);
       setOrg(myOrg);
     } catch (err) {
       setError(errorMessage(err));
@@ -61,16 +74,37 @@ function AdminContent() {
     }
   }
 
-  async function handleDelete(user: OrgUser) {
-    if (!window.confirm(`Delete user ${user.email}?`)) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmUser) return;
+    const user = confirmUser;
+    setDeleting(true);
     setError(null);
     setSuccess(null);
     try {
       await apiFetch(`/api/users/${user.id}`, { method: "DELETE" });
-      setSuccess(`User ${user.email} deleted`);
+      setSuccess(`User ${user.email} deleted. You can find the user under "Deleted users".`);
       await loadUsers();
     } catch (err) {
       setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
+      setConfirmUser(null);
+    }
+  }
+
+  async function handleActivate(user: OrgUser) {
+    setActivatingId(user.id);
+    setError(null);
+    setSuccess(null);
+    try {
+      await apiFetch(`/api/users/${user.id}/activate`, { method: "POST" });
+      setSuccess(`User ${user.email} is active again`);
+      await loadUsers();
+    } catch (err) {
+      setError(errorMessage(err));
+      await loadUsers();
+    } finally {
+      setActivatingId(null);
     }
   }
 
@@ -97,8 +131,8 @@ function AdminContent() {
 
       {org?.limitReached && (
         <div className="alert alert-warning" role="alert">
-          <strong>User limit reached</strong> ({org.userCount} of {org.userLimit}). No more users can be added.
-          Please contact the super admin to increase the limit.
+          <strong>User limit reached</strong> ({org.userCount} of {org.userLimit}). No more users can be added
+          or re-activated. Please contact your service provider to increase the limit.
         </div>
       )}
       {error && <div className="alert alert-danger">{error}</div>}
@@ -136,38 +170,100 @@ function AdminContent() {
         </div>
       </div>
 
+      <ul className="nav nav-tabs mb-3">
+        <li className="nav-item">
+          <button className={`nav-link ${tab === "active" ? "active" : ""}`} onClick={() => setTab("active")}>
+            Active users ({normalUsers.length})
+          </button>
+        </li>
+        <li className="nav-item">
+          <button className={`nav-link ${tab === "deleted" ? "active" : ""}`} onClick={() => setTab("deleted")}>
+            Deleted users ({deletedUsers.length})
+          </button>
+        </li>
+      </ul>
+
       <div className="card">
         <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th className="text-end">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr><td colSpan={3} className="text-center py-4">Loading...</td></tr>
-              )}
-              {!loading && normalUsers.length === 0 && (
-                <tr><td colSpan={3} className="text-center py-4 text-muted">No users yet.</td></tr>
-              )}
-              {normalUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td className="text-end">
-                    <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(user)}>
-                      Delete
-                    </button>
-                  </td>
+          {tab === "active" ? (
+            <table className="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th className="text-end">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr><td colSpan={3} className="text-center py-4">Loading...</td></tr>
+                )}
+                {!loading && normalUsers.length === 0 && (
+                  <tr><td colSpan={3} className="text-center py-4 text-muted">No users yet.</td></tr>
+                )}
+                {normalUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td className="text-end">
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => setConfirmUser(user)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Deleted on</th>
+                  <th className="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr><td colSpan={4} className="text-center py-4">Loading...</td></tr>
+                )}
+                {!loading && deletedUsers.length === 0 && (
+                  <tr><td colSpan={4} className="text-center py-4 text-muted">No deleted users.</td></tr>
+                )}
+                {deletedUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>{formatDate(user.deletedAt)}</td>
+                    <td className="text-end">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => handleActivate(user)}
+                        disabled={!!org?.limitReached || activatingId === user.id}
+                        title={org?.limitReached ? LIMIT_HINT : undefined}
+                      >
+                        {activatingId === user.id ? "Activating..." : "Activate"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmUser !== null}
+        title="Delete user"
+        message={`Delete ${confirmUser?.email ?? "this user"}? The user can no longer log in. You can activate the user again later from "Deleted users".`}
+        confirmLabel="Delete"
+        danger
+        busy={deleting}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmUser(null)}
+      />
     </>
   );
 }

@@ -11,8 +11,9 @@ Backend alag project hai (`techproject-backend`, port 3001). Frontend sirf backe
 | Page | Kaun dekh sakta hai | Kaam |
 |---|---|---|
 | `/login` | Sab | Email / password se login |
-| `/super-admin` | `super_admin` | Organizations create (details + user limit) / list / edit / delete (soft delete, organization ke saath uska admin bhi banta hai). "View users" se us organization ke users ki read-only list |
-| `/admin` | `admin` | Apni organization ke users create / list / delete (soft delete). User limit poori hone par notice dikhta hai aur create form band ho jata hai |
+| `/super-admin` | `super_admin` | Organizations create (details + user limit) / list / edit / delete (soft delete, organization ke saath uska admin bhi banta hai). "View users" se us organization ke users ki read-only list. "Deleted organizations" tab mein deleted organizations aur unka **Activate** button |
+| `/admin` | `admin` | Apni organization ke users create / list / delete (soft delete). User limit poori hone par notice dikhta hai aur create form band ho jata hai. "Deleted users" tab mein deleted users aur unka **Activate** button |
+| `/profile` | `user` | User apna naam, email, tasveer aur password khud badal sakta hai |
 | `/dashboard` | `user` | Apna profile dekhna |
 
 Login ke baad user apne role ke page par chala jata hai. Galat role wala page khole to redirect ho jata hai.

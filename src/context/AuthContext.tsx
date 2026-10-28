@@ -16,6 +16,7 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>; // reload name / email / picture after the user changed them
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -76,9 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(getFirebaseAuth());
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    setProfile(await apiFetch<Profile>("/api/me"));
+  }, []);
+
   const value = useMemo(
-    () => ({ profile, loading, error, login, logout }),
-    [profile, loading, error, login, logout]
+    () => ({ profile, loading, error, login, logout, refreshProfile }),
+    [profile, loading, error, login, logout, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

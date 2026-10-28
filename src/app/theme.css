@@ -208,3 +208,61 @@ html[data-bs-theme="dark"] {
   color: var(--tp-muted);
   font-size: 0.8rem;
 }
+
+/* ---------- profile picture ---------- */
+.avatar {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--tp-border);
+}
+.avatar-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+}
+
+/* ---------- confirm window (modal) ---------- */
+.modal-backdrop {
+  --bs-backdrop-bg: #000;
+  --bs-backdrop-opacity: 0.65;
+}
+.modal-content {
+  --bs-modal-bg: var(--tp-surface);
+  --bs-modal-border-color: var(--tp-border);
+  --bs-modal-header-border-color: var(--tp-border);
+  --bs-modal-footer-border-color: var(--tp-border);
+  background: var(--tp-surface);
+  color: var(--tp-text);
+}
+.btn-danger {
+  --bs-btn-bg: #F43F5E;
+  --bs-btn-border-color: #F43F5E;
+  --bs-btn-hover-bg: #E11D48;
+  --bs-btn-hover-border-color: #E11D48;
+  --bs-btn-active-bg: #BE123C;
+  --bs-btn-active-border-color: #BE123C;
+  --bs-btn-disabled-bg: #F43F5E;
+  --bs-btn-disabled-border-color: #F43F5E;
+}
+
+/* ---------- tabs (Active / Deleted) ---------- */
+.nav-tabs {
+  --bs-nav-tabs-border-color: var(--tp-border);
+  --bs-nav-link-color: var(--tp-muted);
+  --bs-nav-link-hover-color: #fff;
+  --bs-nav-tabs-link-hover-border-color: transparent;
+  --bs-nav-tabs-link-active-color: #fff;
+  --bs-nav-tabs-link-active-bg: transparent;
+  --bs-nav-tabs-link-active-border-color: var(--tp-border) var(--tp-border) var(--tp-primary);
+}
+.nav-tabs .nav-link {
+  background: none;
+}
+.nav-tabs .nav-link.active {
+  border-bottom: 2px solid var(--tp-primary);
+}
